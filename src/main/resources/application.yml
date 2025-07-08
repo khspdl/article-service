@@ -26,4 +26,4 @@ resilience4j:
         wait-duration: 500ms
 
 snowflake-service:
-  url: ${SNOWFLAKE_SERVICE_URL}
+  url: ${SNOWFLAKE_SERVICE_URL:http://localhost:8110}

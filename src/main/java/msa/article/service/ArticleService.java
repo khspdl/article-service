@@ -5,7 +5,6 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import msa.article.client.SnowflakeServiceClient;
-import msa.article.client.request.SnowflakeRequest;
 import msa.article.client.response.SnowflakeResponse;
 import msa.article.entity.Article;
 import msa.article.entity.BoardArticleCount;
@@ -31,6 +30,8 @@ public class ArticleService {
     private final SnowflakeServiceClient snowflakeServiceClient;
     private final ArticleRepository articleRepository;
     private final BoardArticleCountRepository boardArticleCountRepository;
+
+    private static final String SERVICE = "article-service";
 
     @Transactional
     public ArticleResponse create(ArticleCreateRequest request) throws UnknownHostException {
@@ -58,14 +59,10 @@ public class ArticleService {
     @CircuitBreaker(name = "snowflake", fallbackMethod = "fallbackId")
     private Long getSnowflakeId() throws UnknownHostException {
         String ip = InetAddress.getLocalHost().getHostAddress();
-
-        SnowflakeRequest snowflakeRequest = SnowflakeRequest.builder()
-                .service("article-service")
-                .host(ip)
-                .build();
+        String fullHost = SERVICE + ":" + ip;
 
         log.info("Before call snowflake service");
-        SnowflakeResponse response = snowflakeServiceClient.getId(snowflakeRequest);
+        SnowflakeResponse response = snowflakeServiceClient.getId(fullHost);
         log.info("After call snowflake service");
 
         return response.getSnowflakeId();

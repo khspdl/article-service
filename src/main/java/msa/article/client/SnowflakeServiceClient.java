@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "snowflake-service", url = "http://localhost")
+@FeignClient(name = "snowflake-service", url = "${snowflake-service.url}")
 public interface SnowflakeServiceClient {
 
     @GetMapping("/snowflake")

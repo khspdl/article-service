@@ -24,3 +24,6 @@ resilience4j:
       snowflake:
         max-attempts: 3
         wait-duration: 500ms
+
+snowflake-service:
+  url: ${SNOWFLAKE_SERVICE_URL}

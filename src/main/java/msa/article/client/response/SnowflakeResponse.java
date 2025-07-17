@@ -8,7 +8,6 @@ import lombok.Data;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SnowflakeResponse {
-
     private String host;
     private String service;
     private Long snowflakeId;

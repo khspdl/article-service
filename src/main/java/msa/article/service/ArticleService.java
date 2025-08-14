@@ -59,7 +59,9 @@ public class ArticleService {
     @CircuitBreaker(name = "snowflake", fallbackMethod = "fallbackId")
     private Long getSnowflakeId() throws UnknownHostException {
         String ip = InetAddress.getLocalHost().getHostAddress();
+
         String fullHost = SERVICE + ":" + ip;
+        log.info("Host IP - {}", fullHost);
 
         log.info("Before call snowflake service");
         SnowflakeResponse response = snowflakeServiceClient.getId(fullHost);

@@ -1,5 +1,6 @@
 package msa.article.controller;
 
+import com.amazonaws.xray.spring.aop.XRayEnabled;
 import lombok.RequiredArgsConstructor;
 import msa.article.service.ArticleService;
 import msa.article.service.request.ArticleCreateRequest;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.UnknownHostException;
 import java.util.List;
 
+@XRayEnabled
 @RestController
 @RequiredArgsConstructor
 public class ArticleController {

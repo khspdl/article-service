@@ -35,6 +35,11 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    implementation 'com.amazonaws:aws-xray-recorder-sdk-spring:2.19.0'
+    implementation 'com.amazonaws:aws-xray-recorder-sdk-sql:2.19.0'
+    implementation 'com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2:2.19.0'
+
     implementation 'commons-fileupload:commons-fileupload:1.6.0'
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     runtimeOnly 'com.mysql:mysql-connector-j:9.3.0'

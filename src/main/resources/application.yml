@@ -4,7 +4,8 @@ spring:
   application:
     name: board-article-service
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: ${DB_DRIVER_CLASS_NAME}
 #    url: jdbc:mysql://127.0.0.1:3306/article
     url: ${DB_URL}
 #    username: root

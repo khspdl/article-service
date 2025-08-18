@@ -9,6 +9,7 @@ import com.amazonaws.xray.strategy.sampling.CentralizedSamplingStrategy;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -44,7 +45,8 @@ public class XRayConfig {
 
     @Bean
     @Primary
-    public DataSource tracingDataSource(DataSource dataSource) {
-        return TracingDataSource.decorate(dataSource);
+    public DataSource tracingDataSource(ObjectProvider<DataSource> provider) {
+        DataSource realDataSource = provider.getIfAvailable();
+        return TracingDataSource.decorate(realDataSource);
     }
 }

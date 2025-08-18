@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.util.ResourceUtils;
 
 import javax.sql.DataSource;
@@ -42,7 +43,8 @@ public class XRayConfig {
     }
 
     @Bean
+    @Primary
     public DataSource tracingDataSource(DataSource dataSource) {
-        return new TracingDataSource(dataSource);
+        return TracingDataSource.decorate(dataSource);
     }
 }

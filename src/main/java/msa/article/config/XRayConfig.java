@@ -6,6 +6,7 @@ import com.amazonaws.xray.AWSXRayRecorderBuilder;
 import com.amazonaws.xray.jakarta.servlet.AWSXRayServletFilter;
 import com.amazonaws.xray.sql.TracingDataSource;
 import com.amazonaws.xray.strategy.sampling.CentralizedSamplingStrategy;
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +43,24 @@ public class XRayConfig {
     }
 
     /**
-     * Spring Boot가 생성하는 기본 DataSource(dataSource)를 가져와서
-     * X-Ray TracingDataSource로 감싸서 @Primary로 등록
+     * 직접 HikariDataSource 생성 + X-Ray wrapping
+     * ECS 환경에서 환경변수 사용
      */
     @Bean
     @Primary
-    public DataSource tracingDataSource(DataSource original) {
-        LOG.info("Wrapping DataSource with AWS X-Ray TracingDataSource");
-        return TracingDataSource.decorate(original);
+    public DataSource tracingDataSource() {
+        String url = System.getenv("DB_URL");
+        String username = System.getenv("DB_USERNAME");
+        String password = System.getenv("DB_PASSWORD");
+        String driver = System.getenv("DB_DRIVER_CLASS_NAME");
+
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        ds.setDriverClassName(driver);
+
+        LOG.info("Wrapping direct HikariDataSource with AWS X-Ray TracingDataSource");
+        return TracingDataSource.decorate(ds);
     }
 }

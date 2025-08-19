@@ -10,6 +10,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -22,6 +23,18 @@ import java.net.URL;
 @Configuration
 public class XRayConfig {
     private static final Logger LOG = LoggerFactory.getLogger(XRayConfig.class);
+
+    @Value("${spring.datasource.url}")
+    private String url;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
+    @Value("${spring.datasource.driver-class-name}")
+    private String driver;
 
     public XRayConfig() {
         try {
@@ -49,10 +62,6 @@ public class XRayConfig {
     @Bean
     @Primary
     public DataSource tracingDataSource() {
-        String url = System.getenv("DB_URL");
-        String username = System.getenv("DB_USERNAME");
-        String password = System.getenv("DB_PASSWORD");
-        String driver = System.getenv("DB_DRIVER_CLASS_NAME");
 
         HikariDataSource ds = new HikariDataSource();
         ds.setJdbcUrl(url);

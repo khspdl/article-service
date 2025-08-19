@@ -9,7 +9,6 @@ import com.amazonaws.xray.strategy.sampling.CentralizedSamplingStrategy;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -48,7 +47,7 @@ public class XRayConfig {
      */
     @Bean
     @Primary
-    public DataSource tracingDataSource(@Qualifier("dataSource") DataSource original) {
+    public DataSource tracingDataSource(DataSource original) {
         LOG.info("Wrapping DataSource with AWS X-Ray TracingDataSource");
         return TracingDataSource.decorate(original);
     }

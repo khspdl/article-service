@@ -9,7 +9,7 @@ import com.amazonaws.xray.strategy.sampling.CentralizedSamplingStrategy;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -18,7 +18,6 @@ import org.springframework.util.ResourceUtils;
 import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.net.URL;
-
 
 @Configuration
 public class XRayConfig {
@@ -34,19 +33,23 @@ public class XRayConfig {
 
             AWSXRay.setGlobalRecorder(awsxRayRecorder);
         } catch (FileNotFoundException e) {
-            LOG.error("XRay config file not found");
+            LOG.error("XRay config file not found", e);
         }
     }
 
     @Bean
-    public Filter TracingFilter() {
+    public Filter tracingFilter() {
         return new AWSXRayServletFilter("articleservice");
     }
 
+    /**
+     * Spring Boot가 생성하는 기본 DataSource(dataSource)를 가져와서
+     * X-Ray TracingDataSource로 감싸서 @Primary로 등록
+     */
     @Bean
     @Primary
-    public DataSource tracingDataSource(ObjectProvider<DataSource> provider) {
-        DataSource realDataSource = provider.getIfAvailable();
-        return TracingDataSource.decorate(realDataSource);
+    public DataSource tracingDataSource(@Qualifier("dataSource") DataSource original) {
+        LOG.info("Wrapping DataSource with AWS X-Ray TracingDataSource");
+        return TracingDataSource.decorate(original);
     }
 }

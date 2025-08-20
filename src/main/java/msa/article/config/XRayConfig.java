@@ -7,8 +7,8 @@ import com.amazonaws.xray.jakarta.servlet.AWSXRayServletFilter;
 import com.amazonaws.xray.plugins.EC2Plugin;
 import com.amazonaws.xray.slf4j.SLF4JSegmentListener;
 import com.amazonaws.xray.strategy.ContextMissingStrategy;
-import com.amazonaws.xray.strategy.sampling.LocalizedSamplingStrategy;
 import com.amazonaws.xray.sql.TracingDataSource;
+import com.amazonaws.xray.strategy.sampling.LocalizedSamplingStrategy;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.servlet.Filter;
@@ -31,12 +31,21 @@ public class XRayConfig {
     @Bean
     public AWSXRayRecorder awsXRayRecorder(XRayProps props) {
         try {
-            URL ruleFileUrl = XRayConfig.class.getResource(props.samplingRulesJson());
             AWSXRayRecorderBuilder builder = AWSXRayRecorderBuilder.standard()
                     .withPlugin(new EC2Plugin())
-                    .withSamplingStrategy(new LocalizedSamplingStrategy(ruleFileUrl))
                     .withSegmentListener(new SLF4JSegmentListener(props.prefixLogName()))
                     .withContextMissingStrategy(new IgnoreContextMissingStrategy());
+
+            // samplingRulesJson이 설정되어 있고, 리소스가 존재하면 LocalizedSamplingStrategy 사용
+            if (!props.samplingRulesJson().isEmpty()) {
+                URL ruleFileUrl = XRayConfig.class.getResource(props.samplingRulesJson());
+                if (ruleFileUrl != null) {
+                    builder.withSamplingStrategy(new LocalizedSamplingStrategy(ruleFileUrl));
+                    log.info("X-Ray sampling strategy initialized from {}", props.samplingRulesJson());
+                } else {
+                    log.warn("X-Ray sampling rules file '{}' not found. Skipping sampling strategy setup.", props.samplingRulesJson());
+                }
+            }
 
             AWSXRayRecorder recorder = builder.build();
             AWSXRay.setGlobalRecorder(recorder);
@@ -64,7 +73,6 @@ public class XRayConfig {
     @Bean
     @Primary
     public DataSource tracingDataSource(HikariConfig hikariConfig) {
-        // 안전 가드: X-Ray 래핑 사용 시 일반 드라이버/URL을 쓰도록 유도
         if (hikariConfig.getDriverClassName() != null &&
                 hikariConfig.getDriverClassName().startsWith("com.amazonaws.xray")) {
             throw new IllegalStateException("""
@@ -96,8 +104,8 @@ public class XRayConfig {
     @Bean
     @ConfigurationProperties(prefix = "aws.xray")
     public XRayProps xrayProps() {
-        // spring-boot가 setter 없는 record에도 바인딩해줌 (Spring Boot 3.x)
-        return new XRayProps(null, null, null);
+        // 안전하게 기본값을 ""로 지정
+        return new XRayProps("", "", "");
     }
 
     // 컨텍스트 누락 시 예외 던지지 않는 전략

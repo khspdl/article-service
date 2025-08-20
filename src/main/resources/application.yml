@@ -1,17 +1,9 @@
 server:
   port: 9000
+
 spring:
   application:
     name: board-article-service
-  datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-    driver-class-name: ${DB_DRIVER_CLASS_NAME}
-#    url: jdbc:mysql://127.0.0.1:3306/article
-    url: ${DB_URL}
-#    username: root
-    username: ${DB_USERNAME}
-#    password: root
-    password: ${DB_PASSWORD}
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     open-in-view: false
@@ -30,4 +22,20 @@ resilience4j:
         wait-duration: 500ms
 
 snowflake-service:
-  url: ${SNOWFLAKE_SERVICE_URL:http://localhost:8110}
+  url: ${SNOWFLAKE_SERVICE_URL}
+
+aws:
+  xray:
+    fixed-segment-name: article-service
+    prefix-log-name: xray
+    sampling-rules-json: /xray/xray-sampling-rules.json
+
+    datasource:
+      driver-class-name: ${DB_DRIVER_CLASS_NAME}
+      jdbc-url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+#      maximum-pool-size: 10
+#      minimum-idle: 2
+#      connection-timeout: 30000
+#      validation-timeout: 5000

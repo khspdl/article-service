@@ -7,14 +7,15 @@ import com.amazonaws.xray.jakarta.servlet.AWSXRayServletFilter;
 import com.amazonaws.xray.plugins.EC2Plugin;
 import com.amazonaws.xray.slf4j.SLF4JSegmentListener;
 import com.amazonaws.xray.strategy.ContextMissingStrategy;
-import com.amazonaws.xray.sql.TracingDataSource;
 import com.amazonaws.xray.strategy.sampling.LocalizedSamplingStrategy;
+import com.amazonaws.xray.sql.TracingDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.servlet.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -23,6 +24,7 @@ import javax.sql.DataSource;
 import java.net.URL;
 
 @Configuration
+@EnableConfigurationProperties(XRayConfig.XRayProps.class)
 public class XRayConfig {
 
     private static final Logger log = LoggerFactory.getLogger(XRayConfig.class);
@@ -37,7 +39,7 @@ public class XRayConfig {
                     .withContextMissingStrategy(new IgnoreContextMissingStrategy());
 
             // samplingRulesJson이 설정되어 있고, 리소스가 존재하면 LocalizedSamplingStrategy 사용
-            if (!props.samplingRulesJson().isEmpty()) {
+            if (props.samplingRulesJson() != null && !props.samplingRulesJson().isBlank()) {
                 URL ruleFileUrl = XRayConfig.class.getResource(props.samplingRulesJson());
                 if (ruleFileUrl != null) {
                     builder.withSamplingStrategy(new LocalizedSamplingStrategy(ruleFileUrl));
@@ -59,6 +61,9 @@ public class XRayConfig {
     // 요청 단위 세그먼트 오픈/클로즈는 필터가 처리
     @Bean
     public Filter tracingFilter(XRayProps props) {
+        if (props.fixedSegmentName() == null || props.fixedSegmentName().isBlank()) {
+            throw new IllegalStateException("X-Ray fixed-segment-name must be configured");
+        }
         return new AWSXRayServletFilter(props.fixedSegmentName());
     }
 
@@ -69,7 +74,7 @@ public class XRayConfig {
         return new HikariConfig();
     }
 
-    // === DataSource 생성 후 X-Ray로 래핑 (순환참조 없음) ===
+    // === DataSource 생성 후 X-Ray로 래핑 ===
     @Bean
     @Primary
     public DataSource tracingDataSource(HikariConfig hikariConfig) {
@@ -95,18 +100,12 @@ public class XRayConfig {
     }
 
     // === X-Ray 프로퍼티 홀더 ===
+    @ConfigurationProperties(prefix = "aws.xray")
     public record XRayProps(
             String fixedSegmentName,
             String prefixLogName,
             String samplingRulesJson
     ) {}
-
-    @Bean
-    @ConfigurationProperties(prefix = "aws.xray")
-    public XRayProps xrayProps() {
-        // 안전하게 기본값을 ""로 지정
-        return new XRayProps("", "", "");
-    }
 
     // 컨텍스트 누락 시 예외 던지지 않는 전략
     static final class IgnoreContextMissingStrategy implements ContextMissingStrategy {
